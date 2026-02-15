@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RSVP | Our Wedding</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a class="brand" href="index.html">A & B</a>
+    <div class="nav-links">
+      <a href="details.html">Details</a>
+      <a href="faq.html">FAQ</a>
+      <a class="button" href="rsvp.html">RSVP</a>
+    </div>
+  </nav>
+</header>
+
+<main class="container">
+
+  <section class="hero">
+    <p class="kicker">Private RSVP</p>
+    <h1>Enter your invitation code</h1>
+    <p class="subhead">
+      Your code is printed on your physical invitation.
+    </p>
+
+    <div style="margin-top:20px;">
+      <input 
+        id="inviteCode"
+        type="text"
+        placeholder="Example: OAK-1847"
+        style="
+          padding:10px;
+          border-radius:10px;
+          border:1px solid #ccc;
+          font-size:16px;
+          width:220px;
+          margin-right:10px;
+        "
+      />
+
+      <button class="button" onclick="checkCode()">
+        Continue
+      </button>
+    </div>
+
+    <p id="error" style="color:#a05a2c; margin-top:10px;"></p>
+
+  </section>
+
+  <section id="rsvpForm" class="card" style="display:none;">
+    <h2>RSVP Form</h2>
+
+    <label>
+      Will you attend?
+      <br><br>
+      <select>
+        <option>Yes, with joy</option>
+        <option>Regretfully decline</option>
+      </select>
+    </label>
+
+    <br><br>
+
+    <label>
+      Message for the couple:
+      <br><br>
+      <textarea rows="4" cols="40"></textarea>
+    </label>
+
+    <br><br>
+
+    <button class="button">
+      Submit RSVP
+    </button>
+
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Every reply helps the forest prepare 🌿</p>
+</footer>
+
+<script>
+const validCodes = [
+  "OAK-1847",
+  "MAPLE-3021",
+  "ELM-7788"
+];
+
+function checkCode() {
+
+  const input = document
+    .getElementById("inviteCode")
+    .value
+    .toUpperCase()
+    .trim();
+
+  if (validCodes.includes(input)) {
+
+    document.getElementById("rsvpForm").style.display = "block";
+    document.getElementById("error").textContent = "";
+
+  } else {
+
+    document.getElementById("error").textContent =
+      "This invitation code was not found.";
+
+  }
+}
+</script>
+
+</body>
+</html>
