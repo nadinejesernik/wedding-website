@@ -132,3 +132,28 @@ h1{
   text-align: center;
   color: rgba(42,35,28,0.65);
 }
+
+.rsvp-block{
+  margin: 14px 0;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(42,35,28,0.12);
+  background: rgba(255,255,255,0.35);
+}
+
+.rsvp-label{
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+input, select, textarea{
+  font-family: inherit;
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(42,35,28,0.25);
+  background: rgba(255,255,255,0.65);
+  width: min(520px, 100%);
+}
+

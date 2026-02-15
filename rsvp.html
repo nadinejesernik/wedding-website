@@ -88,66 +88,128 @@
 </footer>
 
 <script>
-
 let parties = {};
 
 fetch("data/parties.json")
-  .then(response => response.json())
-  .then(data => {
-    parties = data;
-  });
+  .then(r => r.json())
+  .then(data => { parties = data; });
 
 function checkCode() {
+  const input = document.getElementById("inviteCode").value.toUpperCase().trim();
+  const party = parties[input];
 
-  const input = document
-    .getElementById("inviteCode")
-    .value
-    .toUpperCase()
-    .trim();
+  if (!party) {
+    document.getElementById("error").textContent = "This invitation code was not found.";
+    document.getElementById("rsvpForm").style.display = "none";
+    return;
+  }
 
-  if (parties[input]) {
+  document.getElementById("error").textContent = "";
 
-    document.getElementById("rsvpForm").style.display = "block";
+  const namedGuests = Array.isArray(party.guests) ? party.guests : [];
+  const allowed = Number.isFinite(party.allowedGuests) ? party.allowedGuests : namedGuests.length;
+  const extraSeats = Math.max(0, allowed - namedGuests.length);
 
-    document.getElementById("rsvpForm").innerHTML =
-      `
-      <h2>Welcome, ${parties[input].name}</h2>
+  const blocks = [];
 
-      <label>
-        Will you attend?
-        <br><br>
-        <select>
-          <option>Yes, with joy</option>
-          <option>Regretfully decline</option>
+  // Named guests (no redundant name inputs)
+  namedGuests.forEach((guestName, idx) => {
+    blocks.push(`
+      <div class="rsvp-block">
+        <label for="attend_named_${idx}" class="rsvp-label">Will ${guestName} attend?</label>
+        <select id="attend_named_${idx}" name="attend_named_${idx}">
+          <option value="yes">Yes, with joy</option>
+          <option value="no">Regretfully decline</option>
         </select>
+      </div>
+    `);
+  });
+
+  // Plus-one slots (only if extra seats exist)
+ for (let i = 1; i <= extraSeats; i++) {
+
+  const label = extraSeats === 1 ? "Plus One" : `Plus One ${i}`;
+
+  blocks.push(`
+    <div class="rsvp-block">
+
+      <label for="plusone_name_${i}" class="rsvp-label">
+        ${label}'s name (optional):
       </label>
 
-      <br><br>
+      <input 
+        id="plusone_name_${i}" 
+        name="plusone_name_${i}" 
+        type="text" 
+        placeholder="Name"
+        oninput="updatePlusOneLabel(${i}, '${label}')"
+      />
 
-      <label>
-        Message for the couple:
-        <br><br>
-        <textarea rows="4" cols="40"></textarea>
+      <div style="height:12px;"></div>
+
+      <label 
+        id="attend_label_plusone_${i}"
+        for="attend_plusone_${i}" 
+        class="rsvp-label"
+      >
+        Will ${label} attend?
       </label>
 
+      <select id="attend_plusone_${i}" name="attend_plusone_${i}">
+        <option value="yes">Yes, with joy</option>
+        <option value="no">Regretfully decline</option>
+      </select>
+
+      <p class="fineprint" style="margin:10px 0 0;">
+        Leave blank if you are not bringing a guest.
+      </p>
+
+    </div>
+  `);
+}
+
+  document.getElementById("rsvpForm").innerHTML = `
+    <h2>Welcome, ${party.displayName || "Guests"}</h2>
+    <p class="fineprint">Please confirm attendance for each guest on this invitation.</p>
+
+    ${blocks.join("")}
+
+    <label class="rsvp-label">
+      Dietary notes (optional):
       <br><br>
+      <textarea rows="3" cols="40" placeholder="Allergies, vegetarian, etc."></textarea>
+    </label>
 
-      <button class="button">
-        Submit RSVP
-      </button>
-      `;
+    <br><br>
 
-    document.getElementById("error").textContent = "";
+    <label class="rsvp-label">
+      Message for the couple (optional):
+      <br><br>
+      <textarea rows="4" cols="40" placeholder="A note from the heart…"></textarea>
+    </label>
 
+    <br><br>
+
+    <button class="button" type="button">Submit RSVP</button>
+  `;
+
+  document.getElementById("rsvpForm").style.display = "block";
+}
+
+function updatePlusOneLabel(index, defaultLabel) {
+
+  const input = document.getElementById(`plusone_name_${index}`);
+  const label = document.getElementById(`attend_label_plusone_${index}`);
+
+  const name = input.value.trim();
+
+  if (name.length > 0) {
+    label.textContent = `Will ${name} attend?`;
   } else {
-
-    document.getElementById("error").textContent =
-      "This invitation code was not found.";
-
+    label.textContent = `Will ${defaultLabel} attend?`;
   }
 
 }
-
 </script>
 
 </body>

@@ -1,19 +1,22 @@
 {
   "OAK-1847": {
-    "name": "Katja & Jannik",
+    "displayName": "Katja & Jannik",
+    "guests": ["Katja", "Jannik"],
     "allowedGuests": 2
   },
   "MAPLE-3021": {
-    "name": "Michaela",
+    "displayName": "Michaela",
+    "guests": ["Michaela"],
     "allowedGuests": 1
   },
   "ELM-7788": {
-    "name": "Paolo & Paola",
+    "displayName": "Paolo & Paola",
+    "guests": ["Paolo", "Paola"],
     "allowedGuests": 2
   },
-
   "WILLOW-1234": {
-    "name": "Matilde",
-    "allowedGuests": 1
+    "displayName": "Matilde + Guest",
+    "guests": ["Matilde"],
+    "allowedGuests": 2
   }
 }
