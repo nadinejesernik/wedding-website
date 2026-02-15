@@ -88,11 +88,14 @@
 </footer>
 
 <script>
-const validCodes = [
-  "OAK-1847",
-  "MAPLE-3021",
-  "ELM-7788"
-];
+
+let parties = {};
+
+fetch("data/parties.json")
+  .then(response => response.json())
+  .then(data => {
+    parties = data;
+  });
 
 function checkCode() {
 
@@ -102,9 +105,38 @@ function checkCode() {
     .toUpperCase()
     .trim();
 
-  if (validCodes.includes(input)) {
+  if (parties[input]) {
 
     document.getElementById("rsvpForm").style.display = "block";
+
+    document.getElementById("rsvpForm").innerHTML =
+      `
+      <h2>Welcome, ${parties[input].name}</h2>
+
+      <label>
+        Will you attend?
+        <br><br>
+        <select>
+          <option>Yes, with joy</option>
+          <option>Regretfully decline</option>
+        </select>
+      </label>
+
+      <br><br>
+
+      <label>
+        Message for the couple:
+        <br><br>
+        <textarea rows="4" cols="40"></textarea>
+      </label>
+
+      <br><br>
+
+      <button class="button">
+        Submit RSVP
+      </button>
+      `;
+
     document.getElementById("error").textContent = "";
 
   } else {
@@ -113,7 +145,9 @@ function checkCode() {
       "This invitation code was not found.";
 
   }
+
 }
+
 </script>
 
 </body>
