@@ -90,6 +90,7 @@
 <script>
 let parties = {};
 
+// Load parties registry
 fetch("data/parties.json")
   .then(r => r.json())
   .then(data => { parties = data; });
@@ -112,7 +113,7 @@ function checkCode() {
 
   const blocks = [];
 
-  // Named guests (no redundant name inputs)
+  // Named guests
   namedGuests.forEach((guestName, idx) => {
     blocks.push(`
       <div class="rsvp-block">
@@ -126,48 +127,48 @@ function checkCode() {
   });
 
   // Plus-one slots (only if extra seats exist)
- for (let i = 1; i <= extraSeats; i++) {
+  for (let i = 1; i <= extraSeats; i++) {
+    const label = extraSeats === 1 ? "Plus One" : `Plus One ${i}`;
 
-  const label = extraSeats === 1 ? "Plus One" : `Plus One ${i}`;
+    blocks.push(`
+      <div class="rsvp-block">
 
-  blocks.push(`
-    <div class="rsvp-block">
+        <label for="plusone_name_${i}" class="rsvp-label">
+          ${label}'s name (optional):
+        </label>
 
-      <label for="plusone_name_${i}" class="rsvp-label">
-        ${label}'s name (optional):
-      </label>
+        <input
+          id="plusone_name_${i}"
+          name="plusone_name_${i}"
+          type="text"
+          placeholder="Name"
+          oninput="updatePlusOneLabel(${i}, '${label}')"
+        />
 
-      <input 
-        id="plusone_name_${i}" 
-        name="plusone_name_${i}" 
-        type="text" 
-        placeholder="Name"
-        oninput="updatePlusOneLabel(${i}, '${label}')"
-      />
+        <div style="height:12px;"></div>
 
-      <div style="height:12px;"></div>
+        <label
+          id="attend_label_plusone_${i}"
+          for="attend_plusone_${i}"
+          class="rsvp-label"
+        >
+          Will ${label} attend?
+        </label>
 
-      <label 
-        id="attend_label_plusone_${i}"
-        for="attend_plusone_${i}" 
-        class="rsvp-label"
-      >
-        Will ${label} attend?
-      </label>
+        <select id="attend_plusone_${i}" name="attend_plusone_${i}">
+          <option value="yes">Yes, with joy</option>
+          <option value="no">Regretfully decline</option>
+        </select>
 
-      <select id="attend_plusone_${i}" name="attend_plusone_${i}">
-        <option value="yes">Yes, with joy</option>
-        <option value="no">Regretfully decline</option>
-      </select>
+        <p class="fineprint" style="margin:10px 0 0;">
+          Leave blank if you are not bringing a guest.
+        </p>
 
-      <p class="fineprint" style="margin:10px 0 0;">
-        Leave blank if you are not bringing a guest.
-      </p>
+      </div>
+    `);
+  }
 
-    </div>
-  `);
-}
-
+  // Render the form (includes ids for dietary + message so submitRsvp can read them)
   document.getElementById("rsvpForm").innerHTML = `
     <h2>Welcome, ${party.displayName || "Guests"}</h2>
     <p class="fineprint">Please confirm attendance for each guest on this invitation.</p>
@@ -177,7 +178,7 @@ function checkCode() {
     <label class="rsvp-label">
       Dietary notes (optional):
       <br><br>
-      <textarea rows="3" cols="40" placeholder="Allergies, vegetarian, etc."></textarea>
+      <textarea id="dietary" rows="3" cols="40" placeholder="Allergies, vegetarian, etc."></textarea>
     </label>
 
     <br><br>
@@ -185,21 +186,24 @@ function checkCode() {
     <label class="rsvp-label">
       Message for the couple (optional):
       <br><br>
-      <textarea rows="4" cols="40" placeholder="A note from the heart…"></textarea>
+      <textarea id="message" rows="4" cols="40" placeholder="A note from the heart…"></textarea>
     </label>
 
     <br><br>
 
-    <button class="button" type="button">Submit RSVP</button>
+    <p id="saveStatus" class="fineprint"></p>
+    <button class="button" type="button" id="submitBtn">Submit RSVP</button>
   `;
 
   document.getElementById("rsvpForm").style.display = "block";
+  document.getElementById("submitBtn").onclick = () => submitRsvp(input, party);
 }
 
 function updatePlusOneLabel(index, defaultLabel) {
-
   const input = document.getElementById(`plusone_name_${index}`);
   const label = document.getElementById(`attend_label_plusone_${index}`);
+
+  if (!input || !label) return;
 
   const name = input.value.trim();
 
@@ -208,9 +212,77 @@ function updatePlusOneLabel(index, defaultLabel) {
   } else {
     label.textContent = `Will ${defaultLabel} attend?`;
   }
+}
 
+async function submitRsvp(code, party) {
+  const payload = {
+    code: code,
+    name: party.displayName || "Guests",
+    attending: "",
+    dietary: document.getElementById("dietary")?.value?.trim() || "",
+    message: document.getElementById("message")?.value?.trim() || ""
+  };
+
+  // Build a readable attendance summary
+  const lines = [];
+
+  // Named guests
+  (party.guests || []).forEach((guestName, idx) => {
+    const val = document.getElementById(`attend_named_${idx}`)?.value || "";
+    lines.push(`${guestName}: ${val}`);
+  });
+
+  // Plus-ones
+  const namedCount = (party.guests || []).length;
+  const allowed = Number.isFinite(party.allowedGuests) ? party.allowedGuests : namedCount;
+  const extraSeats = Math.max(0, allowed - namedCount);
+
+  for (let i = 1; i <= extraSeats; i++) {
+    const plusName = document.getElementById(`plusone_name_${i}`)?.value?.trim();
+    const val = document.getElementById(`attend_plusone_${i}`)?.value || "";
+
+    // Only record plus-one if a name was entered
+    if (plusName) {
+      lines.push(`${plusName}: ${val}`);
+    }
+  }
+
+  payload.attending = lines.join(" | ");
+
+  const status = document.getElementById("saveStatus");
+  const btn = document.getElementById("submitBtn");
+
+  try {
+    if (status) status.textContent = "Saving…";
+    if (btn) btn.disabled = true;
+
+    const res = await fetch("https://wedding-backend-fbbx.onrender.com/rsvp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Save failed");
+    }
+
+    if (status) status.textContent = "Saved! Thank you 🌿";
+    // Optional: prevent double submissions after success
+    // if (btn) btn.disabled = true;
+  } catch (err) {
+    console.error(err);
+    if (status) status.textContent = "Could not save RSVP. Is the server running?";
+    if (btn) btn.disabled = false; // allow retry
+  } finally {
+    // If you uncomment the "prevent double submissions" line above,
+    // you may want to keep it disabled here.
+    if (btn && status?.textContent !== "Saved! Thank you 🌿") btn.disabled = false;
+  }
 }
 </script>
+
 
 </body>
 </html>
