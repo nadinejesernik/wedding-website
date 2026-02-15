@@ -1,0 +1,19 @@
+{
+  "OAK-1847": {
+    "name": "Katja & Jannik",
+    "allowedGuests": 2
+  },
+  "MAPLE-3021": {
+    "name": "Michaela",
+    "allowedGuests": 1
+  },
+  "ELM-7788": {
+    "name": "Paolo & Paola",
+    "allowedGuests": 2
+  },
+
+  "WILLOW-1234": {
+    "name": "Matilde",
+    "allowedGuests": 1
+  }
+}
