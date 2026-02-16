@@ -280,9 +280,8 @@ async function submitRsvp(code, party) {
     btn.disabled = true;
 
     const res =
-      await fetch(
-        "https://wedding-backend-fbbx.onrender.com/rsvp",
-        {
+      await fetch("https://wedding-backend-production-8a52.up.railway.app/rsvp", 
+      {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
